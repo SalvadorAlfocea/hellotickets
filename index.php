@@ -37,10 +37,10 @@ class HelloTicketsAPI
 $api = new HelloTicketsAPI();
 
 // Excercise 1
-$eventList = $api->callAPI('events', [
+$rawEventList = $api->callAPI('events', [
     'city_id' => 1, //NYC
-    'limit' => 10,
-    'page' => 1
+    'limit' => 0,
+    'page' => 0
 ]);
 
 // Exercise 2
@@ -49,7 +49,6 @@ $performances = $api->callAPI('extend/data/events', [
     'category_id' => 3, // Theatre
     'start_date' => '2024-05-20',
     'end_date' => '2024-06-01',
-    'min_price' => 120,
     'limit' => 10,
     'page' => 1
 ]);
@@ -61,17 +60,29 @@ header('Content-Disposition: attachment; filename=exercise1.csv');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-$csvHeader = ['Event', 'URL', 'Venue', 'Category'];
+$eventList = $rawEventList['events'];
 
-$rawEventList = json_encode($eventList);
-$data = json_decode($rawEventList, true);
+$csvData = [];
+
+foreach ($eventList as $event) {
+    $eventVanue = $event['venue'];
+    $eventCategory = $event['category'];
+
+    $csvData[] = [
+        $event['name'],
+        $event['url'],
+        $eventVanue['name'],
+        $eventCategory['name']
+    ];
+}
 
 ob_end_clean();
+$csvHeader = ['Event', 'URL', 'Venue', 'Category'];
 $output = fopen('php://output', 'w');
 fputcsv($output, $csvHeader);
 
-foreach($data as $data_item) {
-    fputcsv($output, $data_item);
+foreach($csvData as $item) {
+    fputcsv($output, $item);
 }
 
 fclose( $output );
